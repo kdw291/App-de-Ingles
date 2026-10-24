@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LingoCalibrate AI — Calibrador de Inglés Inteligente</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Scrollbars & Mobile App Feel */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            overscroll-behavior-y: none;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Color-coded underlines for interactive calibrated text */
+        .hl-span {
+            position: relative;
+            cursor: pointer;
+            padding: 2px 4px;
+            margin: 0 1px;
+            border-radius: 6px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+            font-weight: 500;
+        }
+
+        /* Grammar & Spelling - Red/Rose */
+        .hl-grammar {
+            border-bottom: 2.5px solid #f43f5e;
+            background-color: rgba(244, 63, 94, 0.12);
+        }
+        .hl-grammar:hover, .hl-grammar.hl-active {
+            background-color: rgba(244, 63, 94, 0.28);
+            box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.35);
+        }
+
+        /* Spanglish & Fluency - Amber/Yellow */
+        .hl-spanglish {
+            border-bottom: 2.5px wavy #f59e0b;
+            background-color: rgba(245, 158, 11, 0.14);
+        }
+        .hl-spanglish:hover, .hl-spanglish.hl-active {
+            background-color: rgba(245, 158, 11, 0.3);
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.4);
+        }
+
+        /* Vocabulary & C1/C2 Precision - Sky/Blue */
+        .hl-vocabulary {
+            border-bottom: 2.5px dashed #38bdf8;
+            background-color: rgba(56, 189, 248, 0.12);
+        }
+        .hl-vocabulary:hover, .hl-vocabulary.hl-active {
+            background-color: rgba(56, 189, 248, 0.28);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35);
+        }
+
+        /* Style & Register - Purple/Violet */
+        .hl-style {
+            border-bottom: 2.5px dotted #a855f7;
+            background-color: rgba(168, 85, 247, 0.12);
+        }
+        .hl-style:hover, .hl-style.hl-active {
+            background-color: rgba(168, 85, 247, 0.28);
+            box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.35);
+        }
+
+        /* Applied / Resolved highlight animation */
+        .hl-resolved {
+            border-bottom: 2px solid #10b981;
+            background-color: rgba(16, 185, 129, 0.16);
+            color: #10b981;
+            transition: all 0.4s ease;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.7; }
+            50% { transform: scale(1.05); opacity: 0.3; }
+            100% { transform: scale(0.95); opacity: 0.7; }
+        }
+        .animate-pulse-slow {
+            animation: pulse-ring 2.4s infinite ease-in-out;
+        }
+
+        /* Smooth progress bar transitions */
+        .score-bar {
+            transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white pb-24">
+
+    <!-- Top App Header (Sticky Mobile Bar) -->
+    <header class="sticky top-0 z-30 backdrop-blur-xl bg-white/85 dark:bg-slate-900/85 border-b border-slate-200/80 dark:border-slate-800/80 px-4 py-3">
+        <div class="max-w-2xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/25 text-white">
+                    <i class="ph-fill ph-magic-wand text-xl"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-1.5">
+                        <h1 class="font-display font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">
+                            LingoCalibrate
+                        </h1>
+                        <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">AI</span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Calibrador de Inglés & Detector de Spanglish</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <!-- Accent Selector (US / UK) for TTS -->
+                <button id="accentToggleBtn" onclick="toggleAccent()" title="Cambiar acento de pronunciación" class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold flex items-center gap-1.5 border border-slate-200/60 dark:border-slate-700/60 transition">
+                    <span id="accentFlag">🇺🇸</span>
+                    <span id="accentLabel">US</span>
+                </button>
+
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()" aria-label="Cambiar tema" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 transition">
+                    <i id="themeIcon" class="ph-fill ph-sun text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container (Mobile-First Centered Viewport) -->
+    <main class="flex-1 w-full max-w-2xl mx-auto px-4 pt-4 space-y-5">
+
+        <!-- ========================================== -->
+        <!-- TAB 1: CALIBRADOR PRINCIPAL                -->
+        <!-- ========================================== -->
+        <section id="tab-calibrator" class="space-y-4">
+
+            <!-- 1. Selector de Objetivo / Tono (Pills) -->
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between px-0.5">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <i class="ph-fill ph-sliders-horizontal text-indigo-500"></i>
+                        Objetivo de tu texto
+                    </label>
+                    <span id="toneDescLabel" class="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">Fluidez cotidiana natural</span>
+                </div>
+                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1" id="tonePillsContainer">
+                    <button onclick="selectTone('general', 'Fluidez cotidiana natural')" data-tone="general" class="tone-pill shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-indigo-600 text-white shadow-md shadow-indigo-500/20">
+                        <i class="ph-fill ph-chat-circle-text"></i> General / Natural
+                    </button>
+                    <button onclick="selectTone('academic', 'Precisión universitaria, papers y ensayos')" data-tone="academic" class="tone-pill shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-400">
+                        <i class="ph-fill ph-graduation-cap"></i> Académico / Uni
+                    </button>
+                    <button onclick="selectTone('professional', 'Emails, trabajo y comunicación ejecutiva')" data-tone="professional" class="tone-pill shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-400">
+                        <i class="ph-fill ph-briefcase"></i> Profesional / Work
+                    </button>
+                    <button onclick="selectTone('creative', 'Literario, expresivo y storytelling')" data-tone="creative" class="tone-pill shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-400">
+                        <i class="ph-fill ph-feather"></i> Creativo / Story
+                    </button>
+                    <button onclick="selectTone('casual', 'Charla con amigos, modismos y slang')" data-tone="casual" class="tone-pill shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-400">
+                        <i class="ph-fill ph-smiley-wink"></i> Casual / Slang
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. Editor de Texto Interactivo + Ejemplos Rápidos -->
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden transition-all">
+                
+                <!-- Top Bar of Editor: Quick Samples & Auto-Calibrate Toggle -->
+                <div class="px-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200/70 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                        <span class="text-[11px] font-medium text-slate-400 dark:text-slate-500 mr-1 shrink-0">Probar ejemplo:</span>
+                        <button onclick="loadSample('casual')" class="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 transition shrink-0">
+                            🍕 Casual
+                        </button>
+                        <button onclick="loadSample('academic')" class="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 transition shrink-0">
+                            📈 Economía
+                        </button>
+                        <button onclick="loadSample('creative')" class="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 transition shrink-0">
+                            🌙 Relato
+                        </button>
+                    </div>
+
+                    <!-- Auto-Calibrate Toggle -->
+                    <label class="flex items-center gap-2 cursor-pointer select-none ml-auto">
+                        <input type="checkbox" id="autoCalibrateToggle" checked onchange="handleAutoToggle()" class="sr-only peer">
+                        <div class="w-8 h-4.5 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all relative peer-checked:bg-indigo-600"></div>
+                        <span class="text-[11px] font-medium text-slate-600 dark:text-slate-400">Auto-calibrar al pausar</span>
+                    </label>
+                </div>
+
+                <!-- Textarea Input -->
+                <div class="p-4 relative">
+                    <textarea
+                        id="englishInput"
+                        rows="4"
+                        placeholder="Escribí o pegá tu texto en inglés acá... (Ej: 'Yesterday I assisted to a party and it was very funny')"
+                        oninput="handleTextInput()"
+                        class="w-full bg-transparent text-base md:text-lg leading-relaxed text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none resize-y min-h-[105px]"
+                    ></textarea>
+
+                    <!-- Typing / Debounce Status Pill -->
+                    <div id="debounceIndicator" class="hidden items-center gap-1.5 text-xs text-indigo-500 dark:text-indigo-400 font-medium mt-1">
+                        <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+                        <span>Esperando que termines de escribir para calibrar...</span>
+                    </div>
+                </div>
+
+                <!-- Bottom Bar of Editor: Word Count, Audio, Clear & Calibrate Button -->
+                <div class="px-4 py-3 bg-slate-50/50 dark:bg-slate-900/90 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="speakText(document.getElementById('englishInput').value)" title="Escuchar tu texto actual" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-500/10 hover:text-indigo-500 text-slate-600 dark:text-slate-300 transition flex items-center gap-1 text-xs font-medium">
+                            <i class="ph-fill ph-speaker-high text-base"></i>
+                            <span class="hidden sm:inline">Escuchar</span>
+                        </button>
+                        <button onclick="copyText(document.getElementById('englishInput').value, 'Texto copiado')" title="Copiar texto" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition text-xs">
+                            <i class="ph ph-copy text-base"></i>
+                        </button>
+                        <button onclick="clearEditor()" title="Limpiar texto" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/10 hover:text-rose-500 text-slate-600 dark:text-slate-300 transition text-xs">
+                            <i class="ph ph-trash text-base"></i>
+                        </button>
+                        <span id="wordCountBadge" class="text-xs text-slate-400 dark:text-slate-500 pl-1 font-mono">0 palabras</span>
+                    </div>
+
+                    <button id="calibrateBtn" onclick="calibrateEnglish()" class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-[0.98] text-white font-semibold text-sm shadow-lg shadow-indigo-500/25 flex items-center gap-2 transition">
+                        <i id="calibrateBtnIcon" class="ph-fill ph-sparkle text-base"></i>
+                        <span id="calibrateBtnText">Calibrar Ahora</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Skeleton State -->
+            <div id="loadingState" class="hidden bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 text-center space-y-4">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 animate-pulse">
+                    <i class="ph-fill ph-magic-wand text-3xl animate-spin"></i>
+                </div>
+                <div class="space-y-1">
+                    <h3 class="font-display font-bold text-base text-slate-800 dark:text-slate-100">Analizando cada palabra y estructura...</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Detectando gramática, naturalidad nativa, nivel CEFR y posibles traducciones literales del español.</p>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- RESULTS CONTAINER (Hidden until analyzed)  -->
+            <!-- ========================================== -->
+            <div id="resultsContainer" class="hidden space-y-4">
+
+                <!-- 3. Quick Verdict Status Banner & CEFR Badge -->
+                <div id="verdictBanner" class="p-4 rounded-3xl border transition-all flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div id="verdictIconBox" class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0">
+                            ✨
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h2 id="verdictTitle" class="font-display font-bold text-base md:text-lg">¡Bien, con detalles para pulir!</h2>
+                                <span id="cefrBadge" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold tracking-wide bg-indigo-500 text-white shadow-sm">
+                                    Nivel B2
+                                </span>
+                            </div>
+                            <p id="verdictSummary" class="text-xs md:text-sm opacity-90 mt-0.5">
+                                Se entiende perfecto, pero hay un par de expresiones que suenan traducidas del español.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <div id="overallScoreValue" class="font-display font-extrabold text-2xl md:text-3xl">78%</div>
+                        <div class="text-[10px] uppercase tracking-wider font-semibold opacity-75">Calibración</div>
+                    </div>
+                </div>
+
+                <!-- 4. Interactive Color-Coded Underlined Text Card -->
+                <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 md:p-5 space-y-4 shadow-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <div>
+                            <h3 class="font-display font-bold text-sm md:text-base flex items-center gap-2">
+                                <i class="ph-fill ph-highlighter-circle text-indigo-500 text-lg"></i>
+                                Radiografía Interactiva del Texto
+                            </h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Tocá cualquier parte subrayada para ver la explicación y corregirla en 1 toque.</p>
+                        </div>
+
+                        <!-- Apply All Corrections Button -->
+                        <button id="applyAllBtn" onclick="applyAllCorrections()" class="px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 transition active:scale-95">
+                            <i class="ph-bold ph-checks text-sm"></i>
+                            <span id="applyAllBtnText">Aplicar todo</span>
+                        </button>
+                    </div>
+
+                    <!-- Color Legend Pills (Filterable or Informative) -->
+                    <div class="flex flex-wrap items-center gap-2 text-[11px] font-medium">
+                        <span class="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-rose-500"></span> Gramática (<span id="count-grammar">0</span>)
+                        </span>
+                        <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span> Fluidez / Spanglish (<span id="count-spanglish">0</span>)
+                        </span>
+                        <span class="px-2.5 py-1 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-sky-500"></span> Vocabulario (<span id="count-vocabulary">0</span>)
+                        </span>
+                        <span class="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-purple-500"></span> Estilo / Tono (<span id="count-style">0</span>)
+                        </span>
+                    </div>
+
+                    <!-- Highlighted Text Output Area -->
+                    <div id="annotatedTextContainer" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/90 border border-slate-200/70 dark:border-slate-800/90 text-base md:text-lg leading-loose font-sans select-text">
+                        <!-- Rendered dynamically with interactive underlined spans -->
+                    </div>
+
+                    <!-- Active Issue Inspection Card (Shows when an underline is tapped, or defaults to the first issue) -->
+                    <div id="activeIssueCard" class="hidden rounded-2xl border-2 border-indigo-500/40 bg-indigo-500/5 dark:bg-slate-800/70 p-4 space-y-3 transition-all">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span id="issueCategoryBadge" class="px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider">
+                                    Gramática
+                                </span>
+                                <span id="issueSpanglishBadge" class="hidden px-2.5 py-0.5 rounded-md text-xs font-bold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                                    🇦🇷/🇪🇸 ¡Traducción literal detectada!
+                                </span>
+                            </div>
+
+                            <div class="flex items-center gap-1">
+                                <button onclick="navigateIssue(-1)" title="Anterior sugerencia" class="p-1.5 rounded-lg bg-slate-200/70 dark:bg-slate-700/70 hover:bg-slate-300 dark:hover:bg-slate-600 text-xs">
+                                    <i class="ph-bold ph-caret-left"></i>
+                                </button>
+                                <span id="issueCounterText" class="text-xs font-mono px-1.5 text-slate-500 dark:text-slate-400">1/3</span>
+                                <button onclick="navigateIssue(1)" title="Siguiente sugerencia" class="p-1.5 rounded-lg bg-slate-200/70 dark:bg-slate-700/70 hover:bg-slate-300 dark:hover:bg-slate-600 text-xs">
+                                    <i class="ph-bold ph-caret-right"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Original -> Replacement Comparison -->
+                        <div class="flex flex-wrap items-center gap-2 pt-1">
+                            <span id="issueOriginalText" class="px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 line-through font-medium text-sm md:text-base">
+                                assisted to
+                            </span>
+                            <i class="ph-bold ph-arrow-right text-slate-400"></i>
+                            <button id="issuePrimaryReplacementBtn" onclick="applySingleCorrection(currentIssueIndex)" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 text-white font-bold text-sm md:text-base shadow-md shadow-emerald-500/20 hover:bg-emerald-400 transition flex items-center gap-1.5">
+                                <span id="issueReplacementText">attended</span>
+                                <i class="ph-bold ph-check-circle"></i>
+                            </button>
+
+                            <!-- Speak replacement button -->
+                            <button onclick="speakCurrentReplacement()" title="Escuchar pronunciación correcta" class="p-2 rounded-xl bg-slate-200/70 dark:bg-slate-700/70 hover:bg-indigo-500/20 hover:text-indigo-400 transition text-slate-600 dark:text-slate-300">
+                                <i class="ph-fill ph-speaker-high text-base"></i>
+                            </button>
+                        </div>
+
+                        <!-- Alternative replacements if available -->
+                        <div id="issueAlternativesBox" class="hidden flex-wrap items-center gap-1.5 pt-0.5">
+                            <span class="text-xs text-slate-400 mr-1">Otras opciones:</span>
+                            <div id="issueAlternativesList" class="flex flex-wrap gap-1.5"></div>
+                        </div>
+
+                        <!-- Spanish Explanation -->
+                        <div class="p-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-700/60 space-y-1.5">
+                            <p id="issueExplanationText" class="text-xs md:text-sm text-slate-700 dark:text-slate-200 leading-relaxed"></p>
+                            <p id="issueSpanishOriginText" class="hidden text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
+                                <i class="ph-fill ph-lightbulb"></i>
+                                <span id="issueSpanishOriginSpan"></span>
+                            </p>
+                        </div>
+
+                        <!-- Action Footer of Inspection Card -->
+                        <div class="flex items-center justify-between gap-2 pt-1">
+                            <button onclick="saveCurrentIssueToGlossary()" class="px-3 py-2 rounded-xl bg-slate-200/70 dark:bg-slate-800 hover:bg-indigo-500/15 hover:text-indigo-400 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition">
+                                <i class="ph-fill ph-bookmark-simple text-sm"></i>
+                                Guardar en Mi Glosario
+                            </button>
+
+                            <button id="applyCurrentBtn" onclick="applySingleCorrection(currentIssueIndex)" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
+                                <i class="ph-bold ph-magic-wand"></i>
+                                Aplicar este cambio
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- All Issues List (Compact Accordion / Quick Overview) -->
+                    <div id="allIssuesListContainer" class="space-y-2 pt-2">
+                        <!-- Dynamically populated cards for quick scanning -->
+                    </div>
+                </div>
+
+                <!-- 5. Reescrituras en 1 Toque (3 Alternativas Completas) -->
+                <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 md:p-5 space-y-3.5 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-display font-bold text-sm md:text-base flex items-center gap-2">
+                                <i class="ph-fill ph-arrows-clockwise text-purple-500 text-lg"></i>
+                                Reescrituras Completas en 1 Toque
+                            </h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Tres versiones listas para usar según cómo quieras sonar.</p>
+                        </div>
+                    </div>
+
+                    <!-- Rewrite Tabs -->
+                    <div class="grid grid-cols-3 gap-2 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-2xl">
+                        <button onclick="switchRewriteTab('native')" id="rwTab-native" class="rw-tab-btn py-2 px-2 rounded-xl text-xs font-bold transition bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm">
+                            ✨ 100% Nativo
+                        </button>
+                        <button onclick="switchRewriteTab('sophisticated')" id="rwTab-sophisticated" class="rw-tab-btn py-2 px-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                            🎩 Nivel C2 Pro
+                        </button>
+                        <button onclick="switchRewriteTab('concise')" id="rwTab-concise" class="rw-tab-btn py-2 px-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                            ⚡ Corto y Directo
+                        </button>
+                    </div>
+
+                    <!-- Active Rewrite Box -->
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200/70 dark:border-slate-800 space-y-3">
+                        <p id="activeRewriteText" class="text-sm md:text-base text-slate-800 dark:text-slate-100 leading-relaxed font-medium"></p>
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/80">
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="speakText(document.getElementById('activeRewriteText').innerText)" class="px-3 py-1.5 rounded-xl bg-slate-200/70 dark:bg-slate-800 hover:bg-indigo-500/20 text-xs font-semibold flex items-center gap-1.5 transition">
+                                    <i class="ph-fill ph-speaker-high"></i> Escuchar
+                                </button>
+                                <button onclick="copyText(document.getElementById('activeRewriteText').innerText, 'Reescritura copiada al portapapeles')" class="px-3 py-1.5 rounded-xl bg-slate-200/70 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
+                                    <i class="ph-bold ph-copy"></i> Copiar
+                                </button>
+                            </div>
+                            <button onclick="useRewriteInEditor()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 text-xs font-bold flex items-center gap-1.5 transition">
+                                <i class="ph-bold ph-arrow-u-up-left"></i> Reemplazar en mi editor
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. Termómetro CEFR & Puntaje Detallado (4 Dimensiones) -->
+                <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 md:p-5 space-y-4 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-display font-bold text-sm md:text-base flex items-center gap-2">
+                                <i class="ph-fill ph-gauge text-emerald-500 text-lg"></i>
+                                Termómetro CEFR & Métricas
+                            </h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Desglose del nivel técnico y naturalidad de tu inglés.</p>
+                        </div>
+                    </div>
+
+                    <!-- CEFR Scale Bar (A1 -> C2) -->
+                    <div class="grid grid-cols-6 gap-1.5 pt-1" id="cefrScaleGrid">
+                        <div data-level="A1" class="cefr-step py-2 rounded-xl text-center text-xs font-bold border border-slate-200 dark:border-slate-800 opacity-50">A1</div>
+                        <div data-level="A2" class="cefr-step py-2 rounded-xl text-center text-xs font-bold border border-slate-200 dark:border-slate-800 opacity-50">A2</div>
+                        <div data-level="B1" class="cefr-step py-2 rounded-xl text-center text-xs font-bold border border-slate-200 dark:border-slate-800 opacity-50">B1</div>
+                        <div data-level="B2" class="cefr-step py-2 rounded-xl text-center text-xs font-bold border border-slate-200 dark:border-slate-800 opacity-50">B2</div>
+                        <div data-level="C1" class="cefr-step py-2 rounded-xl text-center text-xs font-bold border border-slate-200 dark:border-slate-800 opacity-50">C1</div>
+                        <div data-level="C2" class="cefr-step py-2 rounded-xl text-center text-xs font-bold border border-slate-200 dark:border-slate-800 opacity-50">C2</div>
+                    </div>
+
+                    <!-- 4 Score Bars -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                        <!-- Grammar -->
+                        <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 space-y-1.5">
+                            <div class="flex justify-between text-xs font-semibold">
+                                <span class="text-slate-600 dark:text-slate-300">🎯 Gramática y Sintaxis</span>
+                                <span id="scoreGrammarText" class="font-mono text-rose-500">0%</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div id="scoreGrammarBar" class="score-bar h-full bg-rose-500 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Naturalness -->
+                        <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 space-y-1.5">
+                            <div class="flex justify-between text-xs font-semibold">
+                                <span class="text-slate-600 dark:text-slate-300">🌊 Naturalidad Nativa</span>
+                                <span id="scoreNaturalText" class="font-mono text-amber-500">0%</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div id="scoreNaturalBar" class="score-bar h-full bg-amber-500 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Vocabulary -->
+                        <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 space-y-1.5">
+                            <div class="flex justify-between text-xs font-semibold">
+                                <span class="text-slate-600 dark:text-slate-300">💎 Riqueza Léxica</span>
+                                <span id="scoreVocabText" class="font-mono text-sky-500">0%</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div id="scoreVocabBar" class="score-bar h-full bg-sky-500 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Cohesion -->
+                        <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 space-y-1.5">
+                            <div class="flex justify-between text-xs font-semibold">
+                                <span class="text-slate-600 dark:text-slate-300">🔗 Cohesión y Tono</span>
+                                <span id="scoreCohesionText" class="font-mono text-purple-500">0%</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div id="scoreCohesionBar" class="score-bar h-full bg-purple-500 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Coach Tip Box -->
+                    <div class="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-500/20 flex items-start gap-3">
+                        <i class="ph-fill ph-student text-indigo-500 text-xl shrink-0 mt-0.5"></i>
+                        <div class="text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                            <span class="font-bold text-indigo-600 dark:text-indigo-400">Tip para subir de nivel: </span>
+                            <span id="coachTipText">Escribí tu texto arriba para recibir un consejo personalizado de cómo pasar al siguiente escalón CEFR.</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: CONSULTOR "¿CÓMO SE DICE...?"       -->
+        <!-- ========================================== -->
+        <section id="tab-idioms" class="hidden space-y-4">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 space-y-4 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 text-2xl">
+                        💡
+                    </div>
+                    <div>
+                        <h2 class="font-display font-bold text-base md:text-lg">Traductor de Ideas y Modismos</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">¿Tenés una frase en español o argentino en la cabeza y querés saber cómo la diría un nativo sin caer en el Spanglish?</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input
+                        type="text"
+                        id="idiomSearchInput"
+                        placeholder="Ej: 'No doy abasto', 'Por si las moscas', 'Hacer la vista gorda'..."
+                        onkeydown="if(event.key==='Enter') consultIdiom()"
+                        class="flex-1 px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm focus:outline-none focus:border-indigo-500"
+                    >
+                    <button id="idiomSearchBtn" onclick="consultIdiom()" class="px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-indigo-500/20 transition">
+                        <i class="ph-bold ph-magnifying-glass"></i>
+                        <span>Buscar Equivalente</span>
+                    </button>
+                </div>
+
+                <!-- Quick Popular Rioplatense / Spanish Expressions -->
+                <div class="flex flex-wrap gap-1.5 pt-1">
+                    <span class="text-[11px] text-slate-400 mr-1 self-center">Populares:</span>
+                    <button onclick="quickIdiom('No dar abasto')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-500/15 hover:text-indigo-400 transition">No dar abasto</button>
+                    <button onclick="quickIdiom('Menos mal')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-500/15 hover:text-indigo-400 transition">Menos mal</button>
+                    <button onclick="quickIdiom('Ni hablar / Olvidate')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-500/15 hover:text-indigo-400 transition">Ni hablar / Olvidate</button>
+                    <button onclick="quickIdiom('Tener en cuenta')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-500/15 hover:text-indigo-400 transition">Tener en cuenta</button>
+                </div>
+
+                <!-- Idiom Loading -->
+                <div id="idiomLoading" class="hidden py-6 text-center text-sm text-slate-500">
+                    <i class="ph-bold ph-spinner animate-spin text-xl text-indigo-500 mr-1"></i> Buscando expresiones nativas...
+                </div>
+
+                <!-- Idiom Results Container -->
+                <div id="idiomResultsBox" class="hidden space-y-3 pt-2"></div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: MI GLOSARIO PERSONAL                -->
+        <!-- ========================================== -->
+        <section id="tab-glossary" class="hidden space-y-4">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 space-y-4 shadow-sm">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-500 text-2xl">
+                            📓
+                        </div>
+                        <div>
+                            <h2 class="font-display font-bold text-base md:text-lg">Mi Cuaderno de Mejoras</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Correcciones y expresiones C1/C2 que guardaste para repasar.</p>
+                        </div>
+                    </div>
+
+                    <button onclick="clearGlossary()" class="text-xs text-rose-500 hover:underline font-medium">
+                        Vaciar todo
+                    </button>
+                </div>
+
+                <div id="glossaryListContainer" class="space-y-2.5">
+                    <!-- Populated from localStorage -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Floating Toast Notification -->
+    <div id="toastBox" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 translate-y-2 transition-all duration-300">
+        <div class="px-4 py-2.5 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold shadow-xl flex items-center gap-2">
+            <i class="ph-fill ph-check-circle text-emerald-400 dark:text-emerald-600 text-base"></i>
+            <span id="toastText">Acción completada</span>
+        </div>
+    </div>
+
+    <!-- Bottom Mobile Navigation Bar -->
+    <nav class="fixed bottom-0 inset-x-0 z-40 backdrop-blur-xl bg-white/90 dark:bg-slate-900/90 border-t border-slate-200/80 dark:border-slate-800/80 px-4 py-2">
+        <div class="max-w-md mx-auto grid grid-cols-3 gap-2">
+            <button onclick="switchMainTab('calibrator')" id="navBtn-calibrator" class="nav-tab-btn py-1.5 rounded-2xl flex flex-col items-center justify-center gap-0.5 text-indigo-600 dark:text-indigo-400 font-bold transition">
+                <i class="ph-fill ph-magic-wand text-xl"></i>
+                <span class="text-[11px]">Calibrador</span>
+            </button>
+            <button onclick="switchMainTab('idioms')" id="navBtn-idioms" class="nav-tab-btn py-1.5 rounded-2xl flex flex-col items-center justify-center gap-0.5 text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:hover:text-white transition">
+                <i class="ph-fill ph-translate text-xl"></i>
+                <span class="text-[11px]">¿Cómo se dice?</span>
+            </button>
+            <button onclick="switchMainTab('glossary')" id="navBtn-glossary" class="nav-tab-btn py-1.5 rounded-2xl flex flex-col items-center justify-center gap-0.5 text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:hover:text-white transition relative">
+                <i class="ph-fill ph-bookmarks text-xl"></i>
+                <span class="text-[11px]">Mi Glosario</span>
+                <span id="glossaryCountBubble" class="hidden absolute top-1 right-7 w-4 h-4 rounded-full bg-indigo-600 text-white text-[10px] font-bold items-center justify-center">0</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // ============================================================================
+        // APPLICATION STATE & CONFIGURATION
+        // ============================================================================
+        const apiKey = ""; // Canvas runtime injects API key automatically
+        const MODEL_NAME = "gemini-3-flash-preview";
+
+        let currentTone = "general";
+        let currentAccent = "en-US";
+        let debounceTimer = null;
+        let isCalibrating = false;
+
+        // Current calibration result state
+        let calibrationData = null;
+        let currentIssueIndex = 0;
+        let currentRewriteMode = "native";
+
+        // Sample texts with intentional Spanish literal translations, false friends, and grammar errors
+        const SAMPLE_TEXTS = {
+            casual: "Yesterday I assisted to a birthday party with my friends in Palermo. At the beginning I was a bit bored because I didn't know nobody, but then the music became very funny and we finish dancing until 4 AM.",
+            academic: "According with the actual economic data, the inflation rate have a big impact in the purchasing power of the society. For this reason, policymakers must to take measures for stabilize the market.",
+            creative: "The night was cold and the streets were full of shadows. While walking for the old bridge, he reminded the promise he had made to her ten years ago, wishing that the time could go back."
+        };
+
+        // Pre-loaded starter glossary items so the user sees how it works immediately
+        const DEFAULT_GLOSSARY = [
+            {
+                id: "starter-1",
+                original: "assist to a party / class",
+                replacement: "attend / go to a party",
+                category: "spanglish",
+                explanation: "'Assist' es un falso amigo: significa ayudar o asistir a alguien, no ir a un lugar. Para eventos o clases se usa 'attend' o 'go to'."
+            },
+            {
+                id: "starter-2",
+                original: "according with",
+                replacement: "according to",
+                category: "grammar",
+                explanation: "En inglés siempre se usa la preposición 'to' después de 'according' (According to the data...)."
+            }
+        ];
+
+        // ============================================================================
+        // INITIALIZATION
+        // ============================================================================
+        window.onload = function () {
+            initGlossary();
+            updateWordCount();
+            // Load the casual sample by default and run a fast initial calibration demo
+            loadSample('casual', false);
+        };
+
+        // ============================================================================
+        // THEME & ACCENT CONTROLS
+        // ============================================================================
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'ph-fill ph-moon text-lg';
+            } else {
+                html.classList.add('dark');
+                icon.className = 'ph-fill ph-sun text-lg';
+            }
+        }
+
+        function toggleAccent() {
+            const flag = document.getElementById('accentFlag');
+            const label = document.getElementById('accentLabel');
+            if (currentAccent === 'en-US') {
+                currentAccent = 'en-GB';
+                flag.textContent = '🇬🇧';
+                label.textContent = 'UK';
+                showToast('Pronunciación cambiada a Inglés Británico 🇬🇧');
+            } else {
+                currentAccent = 'en-US';
+                flag.textContent = '🇺🇸';
+                label.textContent = 'US';
+                showToast('Pronunciación cambiada a Inglés Americano 🇺🇸');
+            }
+        }
+
+        // ============================================================================
+        // NAVIGATION & TONE SELECTION
+        // ============================================================================
+        function switchMainTab(tabName) {
+            ['calibrator', 'idioms', 'glossary'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tabName);
+                const btn = document.getElementById(`navBtn-${t}`);
+                if (t === tabName) {
+                    btn.className = "nav-tab-btn py-1.5 rounded-2xl flex flex-col items-center justify-center gap-0.5 text-indigo-600 dark:text-indigo-400 font-bold transition relative";
+                } else {
+                    btn.className = "nav-tab-btn py-1.5 rounded-2xl flex flex-col items-center justify-center gap-0.5 text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:hover:text-white transition relative";
+                }
+            });
+            if (tabName === 'glossary') renderGlossary();
+        }
+
+        function selectTone(toneKey, description) {
+            currentTone = toneKey;
+            document.getElementById('toneDescLabel').textContent = description;
+
+            document.querySelectorAll('.tone-pill').forEach(btn => {
+                if (btn.dataset.tone === toneKey) {
+                    btn.className = "tone-pill shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-indigo-600 text-white shadow-md shadow-indigo-500/20";
+                } else {
+                    btn.className = "tone-pill shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-400";
+                }
+            });
+
+            // Re-calibrate if there's already text in the box
+            const text = document.getElementById('englishInput').value.trim();
+            if (text.length > 5 && calibrationData) {
+                calibrateEnglish();
+            }
+        }
+
+        // ============================================================================
+        // EDITOR INPUT, SAMPLES & AUTO-CALIBRATE DEBOUNCE
+        // ============================================================================
+        function updateWordCount() {
+            const text = document.getElementById('englishInput').value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            document.getElementById('wordCountBadge').textContent = `${words} ${words === 1 ? 'palabra' : 'palabras'}`;
+        }
+
+        function handleTextInput() {
+            updateWordCount();
+            clearTimeout(debounceTimer);
+
+            const autoEnabled = document.getElementById('autoCalibrateToggle').checked;
+            const text = document.getElementById('englishInput').value.trim();
+            const indicator = document.getElementById('debounceIndicator');
+
+            if (!autoEnabled || text.length < 6) {
+                indicator.classList.add('hidden');
+                indicator.classList.remove('flex');
+                return;
+            }
+
+            indicator.classList.remove('hidden');
+            indicator.classList.add('flex');
+
+            debounceTimer = setTimeout(() => {
+                indicator.classList.add('hidden');
+                indicator.classList.remove('flex');
+                calibrateEnglish();
+            }, 1800);
+        }
+
+        function handleAutoToggle() {
+            const checked = document.getElementById('autoCalibrateToggle').checked;
+            showToast(checked ? 'Auto-calibración activada al pausar' : 'Auto-calibración desactivada');
+            if (!checked) {
+                clearTimeout(debounceTimer);
+                document.getElementById('debounceIndicator').classList.add('hidden');
+            }
+        }
+
+        function loadSample(type, autoRun = true) {
+            const input = document.getElementById('englishInput');
+            input.value = SAMPLE_TEXTS[type] || SAMPLE_TEXTS.casual;
+            updateWordCount();
+
+            if (type === 'academic') selectTone('academic', 'Precisión universitaria, papers y ensayos');
+            else if (type === 'creative') selectTone('creative', 'Literario, expresivo y storytelling');
+            else selectTone('general', 'Fluidez cotidiana natural');
+
+            if (autoRun) {
+                calibrateEnglish();
+            }
+        }
+
+        function clearEditor() {
+            clearTimeout(debounceTimer);
+            document.getElementById('englishInput').value = '';
+            updateWordCount();
+            document.getElementById('resultsContainer').classList.add('hidden');
+            document.getElementById('debounceIndicator').classList.add('hidden');
+            calibrationData = null;
+        }
+
+        // ============================================================================
+        // GEMINI API CALL WITH EXPONENTIAL BACKOFF & STRUCTURED JSON SCHEMA
+        // ============================================================================
+        async function fetchGeminiWithBackoff(payload, maxRetries = 4) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
+            let delay = 1000;
+
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP status ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!text) throw new Error("Empty response from model");
+                    return JSON.parse(text);
+                } catch (err) {
+                    if (attempt === maxRetries) throw err;
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        async function calibrateEnglish() {
+            const text = document.getElementById('englishInput').value.trim();
+            if (!text) {
+                showToast('Escribí algo en inglés primero para calibrar');
+                return;
+            }
+            if (isCalibrating) return;
+
+            clearTimeout(debounceTimer);
+            document.getElementById('debounceIndicator').classList.add('hidden');
+
+            isCalibrating = true;
+            const btn = document.getElementById('calibrateBtn');
+            const btnIcon = document.getElementById('calibrateBtnIcon');
+            const btnText = document.getElementById('calibrateBtnText');
+            btn.disabled = true;
+            btnIcon.className = "ph-bold ph-spinner animate-spin text-base";
+            btnText.textContent = "Calibrando...";
+
+            document.getElementById('loadingState').classList.remove('hidden');
+
+            const systemInstruction = `Sos "LingoCalibrate AI", un profesor y calibrador experto en lengua inglesa pensado para hablantes nativos de español (especialmente español rioplatense/argentino).
+Tu tarea es analizar el texto en inglés del usuario según el tono objetivo seleccionado ("${currentTone}").
+Reglas críticas:
+1. Cada elemento en 'issues' DEBE tener en 'originalSubstring' una subcadena EXACTA (respetando mayúsculas, minúsculas y signos) que aparezca literalmente dentro del texto del usuario.
+2. Clasificá cada problema o mejora en una de estas 4 categorías exactas:
+   - "grammar": Errores gramaticales, tiempos verbales, preposiciones erróneas u ortografía.
+   - "spanglish": Traducciones literales del español ("assisted to", "make a party", "have 20 years", "remind" vs "remember", falsos amigos, estructuras calcadas del castellano) o frases poco naturales para un nativo.
+   - "vocabulary": Oportunidades para usar una palabra mucho más precisa, rica o de nivel C1/C2.
+   - "style": Ajustes de registro o tono según el objetivo (${currentTone}).
+3. Explicá siempre en español claro, cercano y amigable por qué está mal o por qué tu sugerencia suena más natural.
+4. Si el texto ya es 100% perfecto, 'verdictStatus' debe ser "perfect", pero igual podés sugerir 1 o 2 mejoras opcionales de vocabulario/estilo si ayudan a brillar.`;
+
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    verdictStatus: {
+                        type: "STRING",
+                        enum: ["perfect", "good_with_tweaks", "needs_work"]
+                    },
+                    verdictTitle: { type: "STRING" },
+                    verdictSummary: { type: "STRING" },
+                    cefrLevel: {
+                        type: "STRING",
+                        enum: ["A1", "A2", "B1", "B2", "C1", "C2"]
+                    },
+                    overallScore: { type: "INTEGER" },
+                    scores: {
+                        type: "OBJECT",
+                        properties: {
+                            grammar: { type: "INTEGER" },
+                            naturalness: { type: "INTEGER" },
+                            vocabulary: { type: "INTEGER" },
+                            cohesion: { type: "INTEGER" }
+                        },
+                        required: ["grammar", "naturalness", "vocabulary", "cohesion"]
+                    },
+                    coachTip: { type: "STRING" },
+                    issues: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                originalSubstring: { type: "STRING" },
+                                replacement: { type: "STRING" },
+                                alternatives: {
+                                    type: "ARRAY",
+                                    items: { type: "STRING" }
+                                },
+                                category: {
+                                    type: "STRING",
+                                    enum: ["grammar", "spanglish", "vocabulary", "style"]
+                                },
+                                isSpanglish: { type: "BOOLEAN" },
+                                spanishThoughtOrigin: { type: "STRING" },
+                                explanationEs: { type: "STRING" }
+                            },
+                            required: ["originalSubstring", "replacement", "alternatives", "category", "isSpanglish", "spanishThoughtOrigin", "explanationEs"]
+                        }
+                    },
+                    rewrites: {
+                        type: "OBJECT",
+                        properties: {
+                            native: { type: "STRING" },
+                            sophisticated: { type: "STRING" },
+                            concise: { type: "STRING" }
+                        },
+                        required: ["native", "sophisticated", "concise"]
+                    }
+                },
+                required: ["verdictStatus", "verdictTitle", "verdictSummary", "cefrLevel", "overallScore", "scores", "coachTip", "issues", "rewrites"]
+            };
+
+            const payload = {
+                contents: [{
+                    role: "user",
+                    parts: [{
+                        text: `Analizá y calibrá el siguiente texto en inglés para el objetivo "${currentTone}":\n\n"""${text}"""`
+                    }]
+                }],
+                systemInstruction: {
+                    parts: [{ text: systemInstruction }]
+                },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: schema,
+                    temperature: 0.25
+                }
+            };
+
+            try {
+                const data = await fetchGeminiWithBackoff(payload);
+                // Attach local tracking state (resolved: false) to each issue
+                data.sourceText = text;
+                data.issues = (data.issues || []).map((iss, idx) => ({
+                    ...iss,
+                    id: idx,
+                    resolved: false
+                }));
+                calibrationData = data;
+                currentIssueIndex = 0;
+                renderCalibrationResults();
+            } catch (error) {
+                console.error("Error calibrating text:", error);
+                showToast("Hubo un problema al conectar con la IA. Probá de nuevo.");
+            } finally {
+                isCalibrating = false;
+                btn.disabled = false;
+                btnIcon.className = "ph-fill ph-sparkle text-base";
+                btnText.textContent = "Calibrar Ahora";
+                document.getElementById('loadingState').classList.add('hidden');
+            }
+        }
+
+        // ============================================================================
+        // RENDERING CALIBRATION RESULTS & INTERACTIVE UNDERLINES
+        // ============================================================================
+        function renderCalibrationResults() {
+            if (!calibrationData) return;
+
+            const container = document.getElementById('resultsContainer');
+            container.classList.remove('hidden');
+
+            // 1. Verdict Banner Styling
+            const banner = document.getElementById('verdictBanner');
+            const iconBox = document.getElementById('verdictIconBox');
+            const titleEl = document.getElementById('verdictTitle');
+            const summaryEl = document.getElementById('verdictSummary');
+            const cefrEl = document.getElementById('cefrBadge');
+            const scoreEl = document.getElementById('overallScoreValue');
+
+            banner.className = "p-4 rounded-3xl border transition-all flex items-center justify-between gap-3 ";
+            if (calibrationData.verdictStatus === "perfect") {
+                banner.className += "bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-100";
+                iconBox.className = "w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-2xl shrink-0";
+                iconBox.textContent = "🏆";
+            } else if (calibrationData.verdictStatus === "good_with_tweaks") {
+                banner.className += "bg-amber-500/10 border-amber-500/30 text-amber-950 dark:text-amber-100";
+                iconBox.className = "w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center text-2xl shrink-0";
+                iconBox.textContent = "✨";
+            } else {
+                banner.className += "bg-rose-500/10 border-rose-500/30 text-rose-950 dark:text-rose-100";
+                iconBox.className = "w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-500 flex items-center justify-center text-2xl shrink-0";
+                iconBox.textContent = "🛠️";
+            }
+
+            titleEl.textContent = calibrationData.verdictTitle;
+            summaryEl.textContent = calibrationData.verdictSummary;
+            cefrEl.textContent = `Nivel ${calibrationData.cefrLevel}`;
+            scoreEl.textContent = `${calibrationData.overallScore}%`;
+
+            // 2. Render Category Counts
+            const counts = { grammar: 0, spanglish: 0, vocabulary: 0, style: 0 };
+            calibrationData.issues.forEach(iss => {
+                if (!iss.resolved && counts[iss.category] !== undefined) {
+                    counts[iss.category]++;
+                }
+            });
+            document.getElementById('count-grammar').textContent = counts.grammar;
+            document.getElementById('count-spanglish').textContent = counts.spanglish;
+            document.getElementById('count-vocabulary').textContent = counts.vocabulary;
+            document.getElementById('count-style').textContent = counts.style;
+
+            const unresolvedCount = calibrationData.issues.filter(i => !i.resolved).length;
+            const applyAllBtn = document.getElementById('applyAllBtn');
+            const applyAllBtnText = document.getElementById('applyAllBtnText');
+            if (unresolvedCount === 0) {
+                applyAllBtn.classList.add('opacity-50', 'pointer-events-none');
+                applyAllBtnText.textContent = "¡Todo corregido!";
+            } else {
+                applyAllBtn.classList.remove('opacity-50', 'pointer-events-none');
+                applyAllBtnText.textContent = `Aplicar todo (${unresolvedCount})`;
+            }
+
+            // 3. Render Annotated Text with Underlines
+            renderAnnotatedText();
+
+            // 4. Render Active Issue Inspection Card & All Issues List
+            if (calibrationData.issues.length > 0) {
+                document.getElementById('activeIssueCard').classList.remove('hidden');
+                selectIssue(currentIssueIndex);
+            } else {
+                document.getElementById('activeIssueCard').classList.add('hidden');
+            }
+            renderAllIssuesList();
+
+            // 5. Render Rewrites
+            switchRewriteTab(currentRewriteMode);
+
+            // 6. Render CEFR Thermometer & Score Bars
+            document.querySelectorAll('.cefr-step').forEach(el => {
+                if (el.dataset.level === calibrationData.cefrLevel) {
+                    el.className = "cefr-step py-2 rounded-xl text-center text-xs font-extrabold bg-indigo-600 text-white shadow-md shadow-indigo-500/30 scale-105 transition";
+                } else {
+                    el.className = "cefr-step py-2 rounded-xl text-center text-xs font-bold border border-slate-200 dark:border-slate-800 opacity-50 transition";
+                }
+            });
+
+            const s = calibrationData.scores;
+            updateBar('Grammar', s.grammar);
+            updateBar('Natural', s.naturalness);
+            updateBar('Vocab', s.vocabulary);
+            updateBar('Cohesion', s.cohesion);
+
+            document.getElementById('coachTipText').textContent = calibrationData.coachTip;
+        }
+
+        function updateBar(name, val) {
+            const clamped = Math.max(0, Math.min(100, val || 0));
+            document.getElementById(`score${name}Text`).textContent = `${clamped}%`;
+            document.getElementById(`score${name}Bar`).style.width = `${clamped}%`;
+        }
+
+        // Safely escape HTML characters
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Build non-overlapping highlighted HTML for the current editor text
+        function renderAnnotatedText() {
+            const container = document.getElementById('annotatedTextContainer');
+            const currentText = document.getElementById('englishInput').value;
+
+            if (!calibrationData || !calibrationData.issues || calibrationData.issues.length === 0) {
+                container.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400 font-medium">${escapeHtml(currentText)}</span>`;
+                return;
+            }
+
+            // Locate each issue's current substring in `currentText`
+            let matches = [];
+            calibrationData.issues.forEach((issue, idx) => {
+                const target = issue.resolved ? issue.replacement : issue.originalSubstring;
+                if (!target) return;
+
+                let pos = currentText.indexOf(target);
+                // Fallback case-insensitive search if exact case wasn't found
+                if (pos === -1) {
+                    pos = currentText.toLowerCase().indexOf(target.toLowerCase());
+                }
+
+                if (pos !== -1) {
+                    matches.push({
+                        idx,
+                        start: pos,
+                        end: pos + target.length,
+                        text: currentText.substring(pos, pos + target.length),
+                        issue
+                    });
+                }
+            });
+
+            // Sort by start index and filter out overlapping spans
+            matches.sort((a, b) => a.start - b.start);
+            const filtered = [];
+            let lastEnd = 0;
+            for (const m of matches) {
+                if (m.start >= lastEnd) {
+                    filtered.push(m);
+                    lastEnd = m.end;
+                }
+            }
+
+            let html = "";
+            let cursor = 0;
+            filtered.forEach(m => {
+                if (m.start > cursor) {
+                    html += escapeHtml(currentText.substring(cursor, m.start));
+                }
+                const isSelected = m.idx === currentIssueIndex;
+                const activeClass = isSelected ? "hl-active" : "";
+                const catClass = m.issue.resolved ? "hl-resolved" : `hl-${m.issue.category}`;
+                const badgeIcon = m.issue.resolved ? `<i class="ph-bold ph-check text-xs ml-0.5"></i>` : "";
+
+                html += `<span onclick="selectIssue(${m.idx})" data-issue-idx="${m.idx}" class="hl-span ${catClass} ${activeClass}">${escapeHtml(m.text)}${badgeIcon}</span>`;
+                cursor = m.end;
+            });
+
+            if (cursor < currentText.length) {
+                html += escapeHtml(currentText.substring(cursor));
+            }
+
+            container.innerHTML = html;
+        }
+
+        // ============================================================================
+        // INTERACTIVE ISSUE INSPECTION & 1-TAP CORRECTIONS
+        // ============================================================================
+        const CATEGORY_LABELS = {
+            grammar: { name: "Gramática y Ortografía", classes: "bg-rose-500 text-white" },
+            spanglish: { name: "Fluidez / Spanglish", classes: "bg-amber-500 text-slate-950" },
+            vocabulary: { name: "Vocabulario C1/C2", classes: "bg-sky-500 text-slate-950" },
+            style: { name: "Estilo y Tono", classes: "bg-purple-500 text-white" }
+        };
+
+        function selectIssue(idx) {
+            if (!calibrationData || !calibrationData.issues || calibrationData.issues.length === 0) return;
+            currentIssueIndex = (idx + calibrationData.issues.length) % calibrationData.issues.length;
+            const issue = calibrationData.issues[currentIssueIndex];
+
+            // Update active highlight in text
+            document.querySelectorAll('#annotatedTextContainer .hl-span').forEach(el => {
+                const spanIdx = parseInt(el.dataset.issueIdx, 10);
+                el.classList.toggle('hl-active', spanIdx === currentIssueIndex);
+            });
+
+            // Populate Inspection Card
+            const catMeta = CATEGORY_LABELS[issue.category] || CATEGORY_LABELS.grammar;
+            const catBadge = document.getElementById('issueCategoryBadge');
+            catBadge.className = `px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider ${catMeta.classes}`;
+            catBadge.textContent = catMeta.name;
+
+            const spanglishBadge = document.getElementById('issueSpanglishBadge');
+            spanglishBadge.classList.toggle('hidden', !issue.isSpanglish);
+            spanglishBadge.classList.toggle('flex', !!issue.isSpanglish);
+
+            document.getElementById('issueCounterText').textContent = `${currentIssueIndex + 1}/${calibrationData.issues.length}`;
+            document.getElementById('issueOriginalText').textContent = issue.originalSubstring;
+            document.getElementById('issueReplacementText').textContent = issue.replacement;
+            document.getElementById('issueExplanationText').textContent = issue.explanationEs;
+
+            // Spanish origin thought
+            const originP = document.getElementById('issueSpanishOriginText');
+            const originSpan = document.getElementById('issueSpanishOriginSpan');
+            if (issue.spanishThoughtOrigin && issue.spanishThoughtOrigin.trim() !== "") {
+                originP.classList.remove('hidden');
+                originSpan.textContent = `Pensaste en español: "${issue.spanishThoughtOrigin}"`;
+            } else {
+                originP.classList.add('hidden');
+            }
+
+            // Alternatives
+            const altBox = document.getElementById('issueAlternativesBox');
+            const altList = document.getElementById('issueAlternativesList');
+            altList.innerHTML = '';
+            if (issue.alternatives && issue.alternatives.length > 0) {
+                altBox.classList.remove('hidden');
+                altBox.classList.add('flex');
+                issue.alternatives.forEach(alt => {
+                    const btn = document.createElement('button');
+                    btn.className = "px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 text-xs font-semibold text-slate-700 dark:text-slate-300 transition";
+                    btn.textContent = alt;
+                    btn.onclick = () => applySingleCorrection(currentIssueIndex, alt);
+                    altList.appendChild(btn);
+                });
+            } else {
+                altBox.classList.add('hidden');
+                altBox.classList.remove('flex');
+            }
+
+            // Update button state if already resolved
+            const applyBtn = document.getElementById('applyCurrentBtn');
+            if (issue.resolved) {
+                applyBtn.className = "px-4 py-2 rounded-xl bg-emerald-500/20 text-emerald-500 text-xs font-bold flex items-center gap-1.5 pointer-events-none";
+                applyBtn.innerHTML = `<i class="ph-bold ph-check"></i> Cambio aplicado`;
+            } else {
+                applyBtn.className = "px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition";
+                applyBtn.innerHTML = `<i class="ph-bold ph-magic-wand"></i> Aplicar este cambio`;
+            }
+
+            renderAllIssuesList();
+        }
+
+        function navigateIssue(direction) {
+            selectIssue(currentIssueIndex + direction);
+        }
+
+        function applySingleCorrection(idx, customReplacement = null) {
+            if (!calibrationData || !calibrationData.issues[idx]) return;
+            const issue = calibrationData.issues[idx];
+            const replacementToUse = customReplacement || issue.replacement;
+
+            const input = document.getElementById('englishInput');
+            const currentText = input.value;
+            const target = issue.resolved ? issue.replacement : issue.originalSubstring;
+
+            let pos = currentText.indexOf(target);
+            if (pos === -1) {
+                pos = currentText.toLowerCase().indexOf(target.toLowerCase());
+            }
+
+            if (pos !== -1) {
+                input.value = currentText.substring(0, pos) + replacementToUse + currentText.substring(pos + target.length);
+                issue.replacement = replacementToUse;
+                issue.resolved = true;
+                updateWordCount();
+
+                // Boost live score slightly as user resolves mistakes
+                calibrationData.overallScore = Math.min(100, calibrationData.overallScore + 4);
+                document.getElementById('overallScoreValue').textContent = `${calibrationData.overallScore}%`;
+
+                renderCalibrationResults();
+                showToast(`Reemplazado por "${replacementToUse}"`);
+
+                // Automatically jump to next unresolved issue if any
+                const nextUnresolved = calibrationData.issues.findIndex((it, i) => i > idx && !it.resolved);
+                if (nextUnresolved !== -1) {
+                    setTimeout(() => selectIssue(nextUnresolved), 350);
+                }
+            } else {
+                showToast('No se encontró la frase exacta porque el texto fue editado.');
+            }
+        }
+
+        function applyAllCorrections() {
+            if (!calibrationData || !calibrationData.issues) return;
+            const input = document.getElementById('englishInput');
+            let text = input.value;
+            let count = 0;
+
+            calibrationData.issues.forEach(issue => {
+                if (!issue.resolved) {
+                    const pos = text.indexOf(issue.originalSubstring);
+                    if (pos !== -1) {
+                        text = text.substring(0, pos) + issue.replacement + text.substring(pos + issue.originalSubstring.length);
+                        issue.resolved = true;
+                        count++;
+                    }
+                }
+            });
+
+            input.value = text;
+            updateWordCount();
+            calibrationData.overallScore = 98;
+            calibrationData.verdictStatus = "perfect";
+            calibrationData.verdictTitle = "¡Texto pulido al 100%!";
+            calibrationData.verdictSummary = "Aplicaste todas las sugerencias. Tu texto ahora suena súper natural y correcto.";
+
+            renderCalibrationResults();
+            showToast(`¡Se aplicaron ${count} correcciones con éxito!`);
+        }
+
+        function renderAllIssuesList() {
+            const listContainer = document.getElementById('allIssuesListContainer');
+            listContainer.innerHTML = '';
+
+            if (!calibrationData || !calibrationData.issues || calibrationData.issues.length <= 1) return;
+
+            const header = document.createElement('div');
+            header.className = "text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 pt-2 pb-1";
+            header.textContent = `Todas las observaciones (${calibrationData.issues.length})`;
+            listContainer.appendChild(header);
+
+            calibrationData.issues.forEach((iss, idx) => {
+                const row = document.createElement('div');
+                const isCurrent = idx === currentIssueIndex;
+                row.onclick = () => selectIssue(idx);
+                row.className = `p-3 rounded-2xl border cursor-pointer transition flex items-center justify-between gap-2 ${
+                    isCurrent
+                        ? 'bg-indigo-500/10 border-indigo-500/40'
+                        : 'bg-slate-50/70 dark:bg-slate-950/50 border-slate-200/60 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700'
+                }`;
+
+                const dotColors = {
+                    grammar: 'bg-rose-500',
+                    spanglish: 'bg-amber-500',
+                    vocabulary: 'bg-sky-500',
+                    style: 'bg-purple-500'
+                };
+
+                row.innerHTML = `
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="w-2.5 h-2.5 rounded-full shrink-0 ${iss.resolved ? 'bg-emerald-500' : dotColors[iss.category]}"></span>
+                        <div class="truncate text-xs md:text-sm">
+                            <span class="line-through text-slate-400 mr-1.5">${escapeHtml(iss.originalSubstring)}</span>
+                            <i class="ph-bold ph-arrow-right text-[10px] text-slate-400 mr-1.5"></i>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400">${escapeHtml(iss.replacement)}</span>
+                        </div>
+                    </div>
+                    <div class="shrink-0">
+                        ${iss.resolved
+                            ? '<span class="text-[11px] font-bold text-emerald-500 flex items-center gap-1"><i class="ph-bold ph-check-circle"></i> Listo</span>'
+                            : '<span class="text-[11px] font-semibold text-indigo-500">Ver</span>'}
+                    </div>
+                `;
+                listContainer.appendChild(row);
+            });
+        }
+
+        // ============================================================================
+        // REWRITES TABS & ACTIONS
+        // ============================================================================
+        function switchRewriteTab(mode) {
+            currentRewriteMode = mode;
+            ['native', 'sophisticated', 'concise'].forEach(m => {
+                const btn = document.getElementById(`rwTab-${m}`);
+                if (m === mode) {
+                    btn.className = "rw-tab-btn py-2 px-2 rounded-xl text-xs font-bold transition bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm";
+                } else {
+                    btn.className = "rw-tab-btn py-2 px-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white";
+                }
+            });
+
+            if (calibrationData && calibrationData.rewrites) {
+                document.getElementById('activeRewriteText').textContent = calibrationData.rewrites[mode] || "";
+            }
+        }
+
+        function useRewriteInEditor() {
+            const rewriteText = document.getElementById('activeRewriteText').innerText;
+            if (!rewriteText) return;
+            document.getElementById('englishInput').value = rewriteText;
+            updateWordCount();
+            showToast('Reescritura cargada en tu editor principal');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ============================================================================
+        // "¿CÓMO SE DICE...?" IDIOM CONSULTANT
+        // ============================================================================
+        function quickIdiom(phrase) {
+            document.getElementById('idiomSearchInput').value = phrase;
+            consultIdiom();
+        }
+
+        async function consultIdiom() {
+            const query = document.getElementById('idiomSearchInput').value.trim();
+            if (!query) {
+                showToast('Escribí una expresión en español para buscar');
+                return;
+            }
+
+            const loading = document.getElementById('idiomLoading');
+            const resultsBox = document.getElementById('idiomResultsBox');
+            const btn = document.getElementById('idiomSearchBtn');
+
+            loading.classList.remove('hidden');
+            resultsBox.classList.add('hidden');
+            btn.disabled = true;
+
+            const payload = {
+                contents: [{
+                    role: "user",
+                    parts: [{
+                        text: `El usuario quiere saber cómo decir la expresión o idea en español "${query}" en inglés auténtico y natural (evitando el Spanglish). Dame 3 opciones (Natural/Cotidiana, Formal/Profesional, y Slang/Idiomática) con ejemplos de uso.`
+                    }]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            literalTrapWarning: { type: "STRING" },
+                            options: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        registerLabel: { type: "STRING" },
+                                        englishPhrase: { type: "STRING" },
+                                        exampleSentence: { type: "STRING" },
+                                        nuanceEs: { type: "STRING" }
+                                    },
+                                    required: ["registerLabel", "englishPhrase", "exampleSentence", "nuanceEs"]
+                                }
+                            }
+                        },
+                        required: ["literalTrapWarning", "options"]
+                    }
+                }
+            };
+
+            try {
+                const data = await fetchGeminiWithBackoff(payload);
+                resultsBox.innerHTML = `
+                    <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                        <i class="ph-fill ph-warning-circle text-base shrink-0"></i>
+                        <span><strong>Ojo con el Spanglish:</strong> ${escapeHtml(data.literalTrapWarning)}</span>
+                    </div>
+                `;
+
+                data.options.forEach(opt => {
+                    const card = document.createElement('div');
+                    card.className = "p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2";
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-0.5 rounded-md bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 text-[11px] font-bold uppercase">${escapeHtml(opt.registerLabel)}</span>
+                            <div class="flex items-center gap-1">
+                                <button onclick="speakText('${escapeHtml(opt.englishPhrase)}')" class="p-1.5 rounded-lg bg-slate-200/70 dark:bg-slate-800 hover:text-indigo-400 text-xs">
+                                    <i class="ph-fill ph-speaker-high"></i>
+                                </button>
+                                <button onclick="saveCustomToGlossary('${escapeHtml(query)}', '${escapeHtml(opt.englishPhrase)}', '${escapeHtml(opt.nuanceEs)}')" class="px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-800 hover:bg-indigo-500/20 text-xs font-semibold flex items-center gap-1">
+                                    <i class="ph-fill ph-bookmark-simple"></i> Guardar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="font-display font-bold text-base md:text-lg text-emerald-600 dark:text-emerald-400">${escapeHtml(opt.englishPhrase)}</div>
+                        <p class="text-xs italic text-slate-600 dark:text-slate-300">"${escapeHtml(opt.exampleSentence)}"</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">${escapeHtml(opt.nuanceEs)}</p>
+                    `;
+                    resultsBox.appendChild(card);
+                });
+
+                resultsBox.classList.remove('hidden');
+            } catch (e) {
+                showToast('Error al consultar la expresión. Intentá de nuevo.');
+            } finally {
+                loading.classList.add('hidden');
+                btn.disabled = false;
+            }
+        }
+
+        // ============================================================================
+        // PERSONAL GLOSSARY (LOCALSTORAGE)
+        // ============================================================================
+        function getGlossary() {
+            try {
+                const raw = localStorage.getItem('lingocalibrate_glossary');
+                if (!raw) {
+                    localStorage.setItem('lingocalibrate_glossary', JSON.stringify(DEFAULT_GLOSSARY));
+                    return DEFAULT_GLOSSARY;
+                }
+                return JSON.parse(raw);
+            } catch (e) {
+                return DEFAULT_GLOSSARY;
+            }
+        }
+
+        function initGlossary() {
+            updateGlossaryBadge();
+            renderGlossary();
+        }
+
+        function updateGlossaryBadge() {
+            const items = getGlossary();
+            const bubble = document.getElementById('glossaryCountBubble');
+            if (items.length > 0) {
+                bubble.textContent = items.length;
+                bubble.classList.remove('hidden');
+                bubble.classList.add('flex');
+            } else {
+                bubble.classList.add('hidden');
+            }
+        }
+
+        function saveCurrentIssueToGlossary() {
+            if (!calibrationData || !calibrationData.issues[currentIssueIndex]) return;
+            const iss = calibrationData.issues[currentIssueIndex];
+            saveCustomToGlossary(iss.originalSubstring, iss.replacement, iss.explanationEs, iss.category);
+        }
+
+        function saveCustomToGlossary(original, replacement, explanation, category = 'spanglish') {
+            const list = getGlossary();
+            const exists = list.some(i => i.replacement.toLowerCase() === replacement.toLowerCase());
+            if (exists) {
+                showToast('Ya está guardado en tu Glosario');
+                return;
+            }
+            list.unshift({
+                id: 'item-' + Date.now(),
+                original,
+                replacement,
+                category,
+                explanation
+            });
+            localStorage.setItem('lingocalibrate_glossary', JSON.stringify(list));
+            updateGlossaryBadge();
+            showToast('Guardado en Mi Glosario 📓');
+        }
+
+        function removeGlossaryItem(id) {
+            const list = getGlossary().filter(i => i.id !== id);
+            localStorage.setItem('lingocalibrate_glossary', JSON.stringify(list));
+            updateGlossaryBadge();
+            renderGlossary();
+            showToast('Eliminado del glosario');
+        }
+
+        function clearGlossary() {
+            localStorage.setItem('lingocalibrate_glossary', JSON.stringify([]));
+            updateGlossaryBadge();
+            renderGlossary();
+            showToast('Glosario vaciado');
+        }
+
+        function renderGlossary() {
+            const container = document.getElementById('glossaryListContainer');
+            const items = getGlossary();
+            container.innerHTML = '';
+
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="py-10 text-center text-slate-400 space-y-2">
+                        <i class="ph ph-notebook text-4xl"></i>
+                        <p class="text-sm">Todavía no guardaste mejoras. Tocá "Guardar en Mi Glosario" cuando calibres un texto.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-xs line-through text-rose-500 font-medium">${escapeHtml(item.original)}</span>
+                            <i class="ph-bold ph-arrow-right text-xs text-slate-400"></i>
+                            <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400">${escapeHtml(item.replacement)}</span>
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button onclick="speakText('${escapeHtml(item.replacement)}')" class="p-1.5 rounded-lg bg-slate-200/70 dark:bg-slate-800 hover:text-indigo-400 text-xs">
+                                <i class="ph-fill ph-speaker-high"></i>
+                            </button>
+                            <button onclick="removeGlossaryItem('${item.id}')" class="p-1.5 rounded-lg bg-slate-200/70 dark:bg-slate-800 hover:text-rose-500 text-xs">
+                                <i class="ph ph-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(item.explanation)}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ============================================================================
+        // SPEECH SYNTHESIS (TTS) & CLIPBOARD UTILITIES
+        // ============================================================================
+        function speakText(text) {
+            if (!text || !text.trim()) {
+                showToast('No hay texto para reproducir');
+                return;
+            }
+            if (!('speechSynthesis' in window)) {
+                showToast('Tu navegador no soporta síntesis de voz');
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = currentAccent;
+            utterance.rate = 0.96;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function speakCurrentReplacement() {
+            if (!calibrationData || !calibrationData.issues[currentIssueIndex]) return;
+            speakText(calibrationData.issues[currentIssueIndex].replacement);
+        }
+
+        function copyText(text, successMsg = 'Copiado al portapapeles') {
+            if (!text) return;
+            const tempInput = document.createElement('textarea');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast(successMsg);
+        }
+
+        let toastTimeout = null;
+        function showToast(message) {
+            const box = document.getElementById('toastBox');
+            const text = document.getElementById('toastText');
+            text.textContent = message;
+            box.classList.remove('opacity-0', 'translate-y-2');
+            box.classList.add('opacity-100', 'translate-y-0');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                box.classList.add('opacity-0', 'translate-y-2');
+                box.classList.remove('opacity-100', 'translate-y-0');
+            }, 2400);
+        }
+    </script>
+</body>
+</html>
